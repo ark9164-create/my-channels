@@ -226,6 +226,36 @@
     }
 
     .card.active .card-live { opacity: 1; }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      padding: 8px 12px 10px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .filter-pill {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-user-select: none; user-select: none;
+    }
+    .filter-pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .filter-pill:active { opacity: 0.7; }
+
+    .card.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -259,90 +289,143 @@
   <div class="np-sources" id="np-sources"></div>
 </div>
 
-<div class="section-label">Channels</div>
+<div class="filter-bar" id="filter-bar"></div>
 <div class="grid" id="grid"></div>
 
 <script>
   const channels = [
     // News
-    { name:"CNN",        sub:"Cable News",         icon:"📡", color:"#cc0000",
+    { cat:"News",    name:"CNN",        sub:"Cable News",         icon:"📡", color:"#cc0000",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-345.php", tabUrl:"https://dlhd.link/watch.php?id=345" },
         { label:"TV App",    embedUrl:null,                                       tabUrl:"https://thetvapp.to/tv/cnn-live-stream/" },
-        { label:"CNN.com",   embedUrl:null,                                       tabUrl:"https://www.cnn.com/live" },
       ]},
-    { name:"Fox News",   sub:"Cable News",         icon:"🦊", color:"#003366",
+    { cat:"News",    name:"Fox News",   sub:"Cable News",         icon:"🦊", color:"#003366",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-347.php", tabUrl:"https://dlhd.link/watch.php?id=347" },
       ]},
-    { name:"MSNBC",      sub:"Cable News",         icon:"🔵", color:"#0054a6",
+    { cat:"News",    name:"MSNBC",      sub:"Cable News",         icon:"🔵", color:"#0054a6",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-327.php", tabUrl:"https://dlhd.link/watch.php?id=327" },
       ]},
+    { cat:"News",    name:"CNBC",       sub:"Business News",      icon:"💹", color:"#0a2463",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-309.php", tabUrl:"https://dlhd.link/watch.php?id=309" },
+      ]},
+    { cat:"News",    name:"Newsmax",    sub:"News",               icon:"🗞", color:"#c41e3a",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-613.php", tabUrl:"https://dlhd.link/watch.php?id=613" },
+      ]},
     // Broadcast NY
-    { name:"NBC",        sub:"WNBC · New York",    icon:"🦚", color:"#e5501e",
+    { cat:"NY",      name:"NBC",        sub:"WNBC · New York",    icon:"🦚", color:"#e5501e",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-53.php",  tabUrl:"https://dlhd.link/watch.php?id=53" },
         { label:"TV App NY", embedUrl:null,                                       tabUrl:"https://thetvapp.to/tv/wnbc-new-york-nbc-east-live-stream/" },
-        { label:"NBC.com",   embedUrl:null,                                       tabUrl:"https://www.nbc.com/live" },
       ]},
-    { name:"ABC",        sub:"WABC · New York",    icon:"🔷", color:"#003f7f",
+    { cat:"NY",      name:"ABC",        sub:"WABC · New York",    icon:"🔷", color:"#003f7f",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-51.php",  tabUrl:"https://dlhd.link/watch.php?id=51" },
         { label:"TV App NY", embedUrl:null,                                       tabUrl:"https://thetvapp.to/tv/wabc-new-york-abc-east-live-stream/" },
-        { label:"ABC.com",   embedUrl:null,                                       tabUrl:"https://abc.com/watch-live" },
       ]},
-    { name:"CBS",        sub:"WCBS · New York",    icon:"👁", color:"#003da5",
+    { cat:"NY",      name:"CBS",        sub:"WCBS · New York",    icon:"👁", color:"#003da5",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-52.php",  tabUrl:"https://dlhd.link/watch.php?id=52" },
         { label:"TV App NY", embedUrl:null,                                       tabUrl:"https://thetvapp.to/tv/wcbs-new-york-cbs-east-live-stream/" },
-        { label:"CBS News",  embedUrl:null,                                       tabUrl:"https://www.cbsnews.com/live/" },
       ]},
-    { name:"FOX",        sub:"Broadcast",          icon:"🦁", color:"#e8c32a",
+    { cat:"NY",      name:"FOX",        sub:"Broadcast",          icon:"🦁", color:"#e8c32a",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-54.php",  tabUrl:"https://dlhd.link/watch.php?id=54" },
       ]},
+    // Premium
+    { cat:"Premium", name:"HBO",        sub:"Premium",            icon:"👑", color:"#6a0dad",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-321.php", tabUrl:"https://dlhd.link/watch.php?id=321" },
+      ]},
+    { cat:"Premium", name:"Showtime",   sub:"Premium",            icon:"🎬", color:"#e8000d",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-333.php", tabUrl:"https://dlhd.link/watch.php?id=333" },
+      ]},
+    { cat:"Premium", name:"Starz",      sub:"Premium",            icon:"⭐", color:"#1a1a2e",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-335.php", tabUrl:"https://dlhd.link/watch.php?id=335" },
+      ]},
     // Entertainment
-    { name:"Bravo",      sub:"Reality & Pop",      icon:"✨", color:"#007a4d",
+    { cat:"TV",      name:"Bravo",      sub:"Reality & Pop",      icon:"✨", color:"#007a4d",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-307.php", tabUrl:"https://dlhd.link/watch.php?id=307" },
         { label:"TV App",    embedUrl:null,                                       tabUrl:"https://thetvapp.to/tv/bravo-live-stream/" },
       ]},
-    { name:"MTV",        sub:"Music & Reality",    icon:"🎸", color:"#fe8c00",
+    { cat:"TV",      name:"MTV",        sub:"Music & Reality",    icon:"🎸", color:"#fe8c00",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-371.php", tabUrl:"https://dlhd.link/watch.php?id=371" },
       ]},
-    { name:"TLC",        sub:"The Learning Ch.",   icon:"💜", color:"#7b2d8b",
+    { cat:"TV",      name:"TLC",        sub:"The Learning Ch.",   icon:"💜", color:"#7b2d8b",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-337.php", tabUrl:"https://dlhd.link/watch.php?id=337" },
       ]},
-    { name:"HGTV",       sub:"Home & Garden",      icon:"🏡", color:"#4caf50",
+    { cat:"TV",      name:"HGTV",       sub:"Home & Garden",      icon:"🏡", color:"#4caf50",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-382.php", tabUrl:"https://dlhd.link/watch.php?id=382" },
       ]},
-    { name:"Food Net.",  sub:"Food Network",       icon:"🍳", color:"#f57c00",
+    { cat:"TV",      name:"Food Net.",  sub:"Food Network",       icon:"🍳", color:"#f57c00",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-384.php", tabUrl:"https://dlhd.link/watch.php?id=384" },
       ]},
-    { name:"Discovery",  sub:"Factual",            icon:"🔭", color:"#00457c",
+    { cat:"TV",      name:"Discovery",  sub:"Factual",            icon:"🔭", color:"#00457c",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-313.php", tabUrl:"https://dlhd.link/watch.php?id=313" },
       ]},
-    { name:"History",    sub:"History Channel",    icon:"🏛", color:"#8b6914",
+    { cat:"TV",      name:"History",    sub:"History Channel",    icon:"🏛", color:"#8b6914",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-322.php", tabUrl:"https://dlhd.link/watch.php?id=322" },
       ]},
+    { cat:"Kids",    name:"Disney Ch.", sub:"Kids & Family",      icon:"🏰", color:"#006ed2",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-312.php", tabUrl:"https://dlhd.link/watch.php?id=312" },
+      ]},
+    { cat:"Kids",    name:"Nickelodeon",sub:"Kids",               icon:"🧡", color:"#f26522",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-330.php", tabUrl:"https://dlhd.link/watch.php?id=330" },
+      ]},
+    { cat:"Kids",    name:"Cartoon Net.",sub:"Kids & Animation",  icon:"🎨", color:"#ff5f00",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-339.php", tabUrl:"https://dlhd.link/watch.php?id=339" },
+      ]},
     // Sports
-    { name:"ESPN",       sub:"Sports",             icon:"🏈", color:"#d00022",
+    { cat:"Sports",  name:"ESPN",       sub:"Sports",             icon:"🏈", color:"#d00022",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-44.php",  tabUrl:"https://dlhd.link/watch.php?id=44" },
       ]},
-    { name:"ESPN2",      sub:"Sports",             icon:"🏀", color:"#b00018",
+    { cat:"Sports",  name:"ESPN2",      sub:"Sports",             icon:"🏀", color:"#b00018",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-45.php",  tabUrl:"https://dlhd.link/watch.php?id=45" },
       ]},
+    { cat:"Sports",  name:"FS1",        sub:"Fox Sports 1",       icon:"🦅", color:"#e8c32a",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-39.php",  tabUrl:"https://dlhd.link/watch.php?id=39" },
+      ]},
+    { cat:"Sports",  name:"NBA TV",     sub:"Basketball",         icon:"🏀", color:"#c8102e",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-404.php", tabUrl:"https://dlhd.link/watch.php?id=404" },
+      ]},
+    { cat:"Sports",  name:"NFL Network",sub:"Football",           icon:"🏈", color:"#013369",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-405.php", tabUrl:"https://dlhd.link/watch.php?id=405" },
+      ]},
+    { cat:"Sports",  name:"MLB Network",sub:"Baseball",           icon:"⚾", color:"#002d72",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-399.php", tabUrl:"https://dlhd.link/watch.php?id=399" },
+      ]},
+    { cat:"Sports",  name:"Golf Ch.",   sub:"Golf Channel",       icon:"⛳", color:"#006b3f",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-318.php", tabUrl:"https://dlhd.link/watch.php?id=318" },
+      ]},
+    { cat:"Sports",  name:"CBS Sports", sub:"CBS Sports Network", icon:"🏆", color:"#003da5",
+      sources:[
+        { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-308.php", tabUrl:"https://dlhd.link/watch.php?id=308" },
+      ]},
     // Weather
-    { name:"Weather",    sub:"The Weather Channel",icon:"🌤", color:"#1565c0",
+    { cat:"TV",      name:"Weather",    sub:"The Weather Channel",icon:"🌤", color:"#1565c0",
       sources:[
         { label:"DaddyLive", embedUrl:"https://dlhd.link/stream/stream-394.php", tabUrl:"https://dlhd.link/watch.php?id=394" },
       ]},
@@ -416,6 +499,26 @@
     embedError.classList.add('show');
   }
 
+  // Build filter bar
+  const filterBar = document.getElementById('filter-bar');
+  const cats = ['All', ...new Set(channels.map(c => c.cat))];
+  let activeFilter = 'All';
+
+  cats.forEach(cat => {
+    const pill = document.createElement('button');
+    pill.className = 'filter-pill' + (cat === 'All' ? ' active' : '');
+    pill.textContent = cat;
+    pill.addEventListener('click', () => {
+      activeFilter = cat;
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      document.querySelectorAll('.card').forEach(c => {
+        c.classList.toggle('hidden', cat !== 'All' && c.dataset.cat !== cat);
+      });
+    });
+    filterBar.appendChild(pill);
+  });
+
   // Build grid
   const grid = document.getElementById('grid');
 
@@ -423,6 +526,7 @@
     const card = document.createElement('div');
     card.className = 'card';
     card.id = 'card-' + chIdx;
+    card.dataset.cat = ch.cat;
     card.innerHTML = `
       <div class="card-accent" style="background:${ch.color}"></div>
       <div class="card-inner">
@@ -436,12 +540,10 @@
     `;
 
     card.addEventListener('click', () => {
-      // deactivate all
       document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
       card.style.setProperty('--accent', ch.color);
       loadSource(ch, 0);
-      // scroll player into view
       document.querySelector('.player-wrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
