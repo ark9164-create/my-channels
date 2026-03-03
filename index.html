@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0d10" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="My Channels" />
+  <link rel="manifest" href="manifest.json" />
+  <title>My Channels</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d10;
+      --surface: #16161c;
+      --surface2: #1e1e27;
+      --border: rgba(255,255,255,0.07);
+      --text: #f0f0f5;
+      --muted: #888896;
+      --radius: 16px;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100dvh;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    header {
+      padding: 20px 20px 0;
+      padding-top: calc(20px + env(safe-area-inset-top));
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #e53;
+      box-shadow: 0 0 8px #e53;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    header span {
+      font-size: 13px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px 16px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 540px) {
+      .grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .card:active { transform: scale(0.97); }
+
+    .card-bar {
+      height: 4px;
+      width: 100%;
+    }
+
+    .card-body {
+      padding: 14px 14px 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .channel-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      flex-shrink: 0;
+    }
+
+    .channel-name {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.2px;
+    }
+
+    .channel-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+      font-weight: 500;
+    }
+
+    .watch-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      color: #fff;
+      transition: opacity 0.15s;
+      margin-top: 2px;
+    }
+
+    .watch-btn:active { opacity: 0.8; }
+
+    .sources-toggle {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 8px 14px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      width: 100%;
+      transition: color 0.15s;
+    }
+
+    .sources-toggle:hover { color: var(--text); }
+
+    .sources-toggle svg {
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .sources-toggle.open svg { transform: rotate(180deg); }
+
+    .sources-panel {
+      display: none;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+    }
+
+    .sources-panel.open { display: flex; }
+
+    .source-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--surface2);
+      transition: background 0.1s;
+    }
+
+    .source-link:hover { background: #23232d; }
+
+    .source-link:last-child { border-bottom-left-radius: calc(var(--radius) - 1px); border-bottom-right-radius: calc(var(--radius) - 1px); }
+
+    .source-link .source-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      opacity: 0.8;
+    }
+
+    .badge-primary { background: rgba(255,255,255,0.12); color: var(--text); }
+    .badge-alt { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+    .source-link svg { opacity: 0.4; flex-shrink: 0; margin-left: 6px; }
+
+    .install-bar {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .install-bar.visible { display: flex; }
+
+    .install-bar p { font-size: 13px; color: var(--muted); flex: 1; }
+    .install-bar p strong { color: var(--text); display: block; font-size: 14px; }
+
+    .install-btn {
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .install-dismiss {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="dot"></div>
+  <h1>My Channels</h1>
+  <span id="live-count"></span>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<div class="install-bar" id="install-bar">
+  <p><strong>Add to Home Screen</strong>Open in Safari → Share → Add to Home Screen</p>
+  <button class="install-btn" id="install-btn">Install</button>
+  <button class="install-dismiss" id="install-dismiss">×</button>
+</div>
+
+<script>
+  const channels = [
+    {
+      name: "CNN",
+      sub: "Cable News",
+      color: "#CC0000",
+      emoji: "📡",
+      sources: [
+        { label: "TV App", url: "https://thetvapp.to/tv/cnn-live-stream/", primary: true },
+        { label: "CNN.com", url: "https://www.cnn.com/live", primary: false },
+        { label: "Pluto TV", url: "https://pluto.tv/live-tv/cnn", primary: false },
+      ]
+    },
+    {
+      name: "NBC",
+      sub: "WNBC · New York",
+      color: "#FA4616",
+      emoji: "🦚",
+      sources: [
+        { label: "TV App · NY", url: "https://thetvapp.to/tv/wnbc-new-york-nbc-east-live-stream/", primary: true },
+        { label: "NBC.com", url: "https://www.nbc.com/live", primary: false },
+        { label: "Peacock", url: "https://www.peacocktv.com/", primary: false },
+      ]
+    },
+    {
+      name: "ABC",
+      sub: "WABC · New York",
+      color: "#003F7F",
+      emoji: "🔵",
+      sources: [
+        { label: "TV App · NY", url: "https://thetvapp.to/tv/wabc-new-york-abc-east-live-stream/", primary: true },
+        { label: "ABC.com", url: "https://abc.com/watch-live", primary: false },
+        { label: "Hulu Live", url: "https://www.hulu.com/live-tv", primary: false },
+      ]
+    },
+    {
+      name: "CBS",
+      sub: "WCBS · New York",
+      color: "#003DA5",
+      emoji: "👁",
+      sources: [
+        { label: "TV App · NY", url: "https://thetvapp.to/tv/wcbs-new-york-cbs-east-live-stream/", primary: true },
+        { label: "CBS News Live", url: "https://www.cbsnews.com/live/", primary: false },
+        { label: "Paramount+", url: "https://www.paramountplus.com/live-tv/stream/wcbs/", primary: false },
+      ]
+    },
+    {
+      name: "Bravo",
+      sub: "Reality & Pop Culture",
+      color: "#007A4D",
+      emoji: "✨",
+      sources: [
+        { label: "TV App", url: "https://thetvapp.to/tv/bravo-live-stream/", primary: true },
+        { label: "Bravo TV", url: "https://www.bravotv.com/live-tv", primary: false },
+        { label: "Peacock", url: "https://www.peacocktv.com/", primary: false },
+      ]
+    },
+  ];
+
+  function buildCard(ch) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const primaryUrl = ch.sources.find(s => s.primary).url;
+
+    card.innerHTML = `
+      <div class="card-bar" style="background:${ch.color}"></div>
+      <div class="card-body">
+        <div class="channel-logo" style="background:${ch.color}22; color:${ch.color}">${ch.emoji}</div>
+        <div>
+          <div class="channel-name">${ch.name}</div>
+          <div class="channel-sub">${ch.sub}</div>
+        </div>
+        <a href="${primaryUrl}" target="_blank" rel="noopener" class="watch-btn" style="background:${ch.color}">
+          ▶ Watch Now
+        </a>
+      </div>
+      <button class="sources-toggle" aria-expanded="false">
+        All Sources
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+          <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="sources-panel">
+        ${ch.sources.map(s => `
+          <a href="${s.url}" target="_blank" rel="noopener" class="source-link">
+            ${s.label}
+            <span class="source-badge ${s.primary ? 'badge-primary' : 'badge-alt'}">${s.primary ? 'PRIMARY' : 'ALT'}</span>
+          </a>
+        `).join('')}
+      </div>
+    `;
+
+    const toggle = card.querySelector('.sources-toggle');
+    const panel = card.querySelector('.sources-panel');
+
+    toggle.addEventListener('click', () => {
+      const isOpen = panel.classList.toggle('open');
+      toggle.classList.toggle('open', isOpen);
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+
+    return card;
+  }
+
+  const grid = document.getElementById('grid');
+  channels.forEach(ch => grid.appendChild(buildCard(ch)));
+
+  document.getElementById('live-count').textContent = `${channels.length} channels`;
+
+  // PWA install prompt
+  let deferredPrompt;
+  const installBar = document.getElementById('install-bar');
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBar.classList.add('visible');
+  });
+
+  document.getElementById('install-btn').addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+    }
+    installBar.classList.remove('visible');
+  });
+
+  document.getElementById('install-dismiss').addEventListener('click', () => {
+    installBar.classList.remove('visible');
+  });
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
